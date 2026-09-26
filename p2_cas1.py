@@ -1,12 +1,23 @@
 # P2 Cas 1
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 import psycopg2
 import time
 import numpy as np
 
-connection_string = "postgresql://neondb_owner:npg_I0LgpBV8PRDz@ep-patient-salad-b2n9m6fn-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+conn = psycopg2.connect(
+    dbname=os.getenv('DB_NAME'),
+    user=os.getenv('DB_USER'),
+    password=os.getenv('DB_PASSWORD'),
+    host=os.getenv('DB_HOST', 'localhost'),
+    port=os.getenv('DB_PORT', '5432')
+)
 
-conn = psycopg2.connect(connection_string)
 cursor = conn.cursor()
 
 #Agafa els embeddings de la base de dades

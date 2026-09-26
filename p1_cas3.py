@@ -1,6 +1,11 @@
 #P1 Cas 3
 
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import time
 import numpy as np
 
@@ -17,10 +22,14 @@ import psycopg2
 from psycopg2.extras import execute_values
 
 
-connection_string = "postgresql://neondb_owner:npg_I0LgpBV8PRDz@ep-patient-salad-b2n9m6fn-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+conn = psycopg2.connect(
+    dbname=os.getenv('DB_NAME'),
+    user=os.getenv('DB_USER'),
+    password=os.getenv('DB_PASSWORD'),
+    host=os.getenv('DB_HOST', 'localhost'),
+    port=os.getenv('DB_PORT', '5432')
+)
 
-
-conn = psycopg2.connect(connection_string)
 cursor = conn.cursor()
 
 

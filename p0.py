@@ -42,7 +42,7 @@ chunks = [
       ]
 
 # Crear la nova taula de bookCorpus
-cursor.execute("DROP TABLE IF EXISTS bookCorpus;")
+cursor.execute("DROP TABLE IF EXISTS bookCorpus CASCADE;")
 cursor.execute("CREATE TABLE bookCorpus (id SERIAL PRIMARY KEY, sentence TEXT NOT NULL);")
 conn.commit()
 
