@@ -6,11 +6,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-import psycopg2
 import time
 import numpy as np
 
+
+#Carrega la base de dades
+import psycopg2
 
 conn = psycopg2.connect(
     dbname=os.getenv('DB_NAME'),
@@ -23,7 +24,7 @@ conn = psycopg2.connect(
 cursor = conn.cursor()
 
 
-#Agafa els embeddings de la base de dades
+#Agafa les frases i embeddings ordenats amb el seu id de la base de dades
 cursor.execute("SELECT e.id, b.sentence, e.embedding FROM bookCorpus_embeddings e JOIN bookCorpus b ON e.id = b.id ORDER BY e.id; ")
 
 
@@ -40,12 +41,9 @@ query_indexes = list(range(10))
 #Cas distància euclidiana
 euclidean_times = []
 
-
 for index in query_indexes:
 
-
     start = time.perf_counter()
-
 
     query_embedding = embeddings[index]
     distances = np.linalg.norm(
@@ -53,25 +51,19 @@ for index in query_indexes:
         axis=1
     )
 
-
-    # No compara la frase amb si mateixa
+    #No compara la frase amb si mateixa
     distances[index] = np.inf
 
-
-    top2_idx = np.argpartition(distances, 2)[:2]
+    top2_idx = np.argpartition(distances, 2)[:2]                #Cost O(n), si s'utilitzés np.argsort seria O(n log n)
     top2_euclidean = top2_idx[np.argsort(distances[top2_idx])]
-
 
     end = time.perf_counter()
 
-
     euclidean_times.append(end - start)
-
 
     print(f"\nFrase seleccionada: ID {ids[index]}: {sentences[index]}")
     
     print("Top-2 frases amb distància euclidiana:")
-
 
     for i in top2_euclidean:
         print(f"  ID {ids[i]} | "f"distancia = {distances[i]:.4f} | "f"{sentences[i]}")
@@ -80,40 +72,30 @@ for index in query_indexes:
 #Cas distància de Manhattan
 manhattan_times = []
 
-
 for index in query_indexes:
-
 
     start = time.perf_counter()
 
-
     query_embedding = embeddings[index]
-
 
     distances = np.sum(
         np.abs(embeddings - query_embedding),
         axis=1
     )
 
-
-    # No compara la frase amb si mateixa
+    #No compara la frase amb si mateixa
     distances[index] = np.inf
 
-
-    top2_idx = np.argpartition(distances, 2)[:2]
-    top2_manhattan = top2_idx[np.argsort(distances[top2_idx])]  #top2_manhattan = np.argsort(distances)[:2]
-
+    top2_idx = np.argpartition(distances, 2)[:2]                #Cost O(n), si s'utilitzés np.argsort seria O(n log n)
+    top2_manhattan = top2_idx[np.argsort(distances[top2_idx])]
 
     end = time.perf_counter()
 
-
     manhattan_times.append(end - start)
-
 
     print(f"\nFrase seleccionada: ID {ids[index]}: {sentences[index]}")
     
     print("Top-2 frases amb distància de Manhattan:")
-
 
     for i in top2_manhattan:
         print(
@@ -123,13 +105,14 @@ for index in query_indexes:
         )
 
 
+#Mostra estadístiques
 print("\n--- Temps distància euclidiana ---")
 
 print(f"Mínim: {np.min(euclidean_times):.6f} s")
 print(f"Màxim: {np.max(euclidean_times):.6f} s")
 print(f"Mitjana: {np.mean(euclidean_times):.6f} s")
 print(f"Desviació estàndard: {np.std(euclidean_times):.6f} s")
-print(f"Temps total: {np.sum(euclidean_times):.6f} s")
+print(f"Temps total: {np.sum(euclidean_times):.6f} s")          #Afegit per obtenir més informació sobre els temps
 
 print("\n--- Temps distància de Manhattan ---")
 
@@ -137,4 +120,6 @@ print(f"Mínim: {np.min(manhattan_times):.6f} s")
 print(f"Màxim: {np.max(manhattan_times):.6f} s")
 print(f"Mitjana: {np.mean(manhattan_times):.6f} s")
 print(f"Desviació estàndard: {np.std(manhattan_times):.6f} s")
-print(f"Temps total: {np.sum(manhattan_times):.6f} s")
+print(f"Temps total: {np.sum(manhattan_times):.6f} s")          #Afegit per obtenir més informació sobre els temps
+cursor.close()
+conn.close()

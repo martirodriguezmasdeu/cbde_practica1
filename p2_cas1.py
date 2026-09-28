@@ -5,10 +5,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-import psycopg2
 import time
 import numpy as np
+
+
+#Carrega la base de dades
+import psycopg2
 
 conn = psycopg2.connect(
     dbname=os.getenv('DB_NAME'),
@@ -20,7 +22,7 @@ conn = psycopg2.connect(
 
 cursor = conn.cursor()
 
-#Agafa els embeddings de la base de dades
+#Agafa les frases i embeddings ordenats amb el seu id de la base de dades
 cursor.execute("SELECT id, sentence, embedding FROM bookCorpus_embeddings ORDER BY id")
 
 rows = cursor.fetchall()
@@ -46,10 +48,10 @@ for index in query_indexes:
         axis=1
     )
 
-    # No compara la frase amb si mateixa
+    #No compara la frase amb si mateixa
     distances[index] = np.inf
 
-    top2_idx = np.argpartition(distances, 2)[:2]
+    top2_idx = np.argpartition(distances, 2)[:2]                #Cost O(n), si s'utilitzés np.argsort seria O(n log n)
     top2_euclidean = top2_idx[np.argsort(distances[top2_idx])]
 
     end = time.perf_counter()
@@ -62,6 +64,7 @@ for index in query_indexes:
 
     for i in top2_euclidean:
         print(f"  ID {ids[i]} | "f"distancia = {distances[i]:.4f} | "f"{sentences[i]}")
+
 
 #Cas distància de Manhattan
 manhattan_times = []
@@ -77,10 +80,10 @@ for index in query_indexes:
         axis=1
     )
 
-    # No compara la frase amb si mateixa
+    #No compara la frase amb si mateixa
     distances[index] = np.inf
 
-    top2_idx = np.argpartition(distances, 2)[:2]
+    top2_idx = np.argpartition(distances, 2)[:2]                #Cost O(n), si s'utilitzés np.argsort seria O(n log n)
     top2_manhattan = top2_idx[np.argsort(distances[top2_idx])]
 
     end = time.perf_counter()
@@ -98,13 +101,15 @@ for index in query_indexes:
             f"{sentences[i]}"
         )
 
+
+#Mostra estadístiques
 print("\n--- Temps distància euclidiana ---")
 
 print(f"Mínim: {np.min(euclidean_times):.6f} s")
 print(f"Màxim: {np.max(euclidean_times):.6f} s")
 print(f"Mitjana: {np.mean(euclidean_times):.6f} s")
 print(f"Desviació estàndard: {np.std(euclidean_times):.6f} s")
-print(f"Temps total: {np.sum(euclidean_times):.6f} s")
+print(f"Temps total: {np.sum(euclidean_times):.6f} s")          #Afegit per obtenir més informació sobre els temps
 
 print("\n--- Temps distància de Manhattan ---")
 
@@ -112,4 +117,7 @@ print(f"Mínim: {np.min(manhattan_times):.6f} s")
 print(f"Màxim: {np.max(manhattan_times):.6f} s")
 print(f"Mitjana: {np.mean(manhattan_times):.6f} s")
 print(f"Desviació estàndard: {np.std(manhattan_times):.6f} s")
-print(f"Temps total: {np.sum(manhattan_times):.6f} s")
+print(f"Temps total: {np.sum(manhattan_times):.6f} s")          #Afegit per obtenir més informació sobre els temps
+
+cursor.close()
+conn.close()

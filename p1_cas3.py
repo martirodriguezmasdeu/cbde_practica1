@@ -10,14 +10,14 @@ import time
 import numpy as np
 
 
-#Carregar el model
+#Carrega el model
 from sentence_transformers import SentenceTransformer
 
 
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 
-#Carregar la base de dades
+#Carrega la base de dades
 import psycopg2
 from psycopg2.extras import execute_values
 
@@ -33,7 +33,7 @@ conn = psycopg2.connect(
 cursor = conn.cursor()
 
 
-#Agafa totes les frases amb els seus ids
+#Agafa totes les frases ordenades amb els seus ids
 cursor.execute("SELECT id, sentence FROM bookCorpus ORDER BY id;")
 
 
@@ -42,10 +42,12 @@ ids = [row[0] for row in rows]
 sentences = [row[1] for row in rows]
 
 
-#Crea els embeddings i els afegeix a la base de dades
+#Crea els embeddings amb el model i els afegeix a la base de dades
 embeddings = model.encode(sentences)
 
 
+#Afegeix la columna embedding a la taula bookCorpus si no existeix
+cursor.execute("ALTER TABLE bookCorpus DROP COLUMN IF EXISTS embedding;")
 cursor.execute("ALTER TABLE bookCorpus ADD COLUMN embedding REAL[];")
 
 
@@ -55,7 +57,7 @@ values = [
 ]
 
 
-# Insereix per chunks i mesura el temps de cada inserció
+#Insereix per chunks i mesura el temps de cada inserció
 chunk_size = 2000
 embedding_times = []
 
@@ -63,9 +65,7 @@ embedding_times = []
 for i in range(0, len(values), chunk_size):
     chunk = values[i:i + chunk_size]
 
-
     start = time.perf_counter()
-
 
     execute_values(
         cursor,
@@ -74,19 +74,18 @@ for i in range(0, len(values), chunk_size):
     )
     conn.commit()
 
-
     end = time.perf_counter()
-
 
     embedding_times.append(end - start)
 
 
-# Mostrar estadístiques
+#Mostra estadístiques
 print("--- Temps d'inserció dels embeddings ---")
 print(f"Mínim: {np.min(embedding_times):.6f} s")
 print(f"Màxim: {np.max(embedding_times):.6f} s")
 print(f"Mitjana: {np.mean(embedding_times):.6f} s")
 print(f"Desviació estàndard: {np.std(embedding_times):.6f} s")
-print(f"Temps total: {np.sum(embedding_times):.6f} s")
+print(f"Temps total: {np.sum(embedding_times):.6f} s")          #Afegit per obtenir més informació sobre els temps
+
 cursor.close()
 conn.close()
