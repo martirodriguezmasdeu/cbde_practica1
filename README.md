@@ -1,8 +1,6 @@
 **Pràctica 1 - CBDE**
 
-**Autors:**
-Naroa García Pérez
-Martí Rodríguez Masdeu
+**Autors:** Naroa García Pérez i Martí Rodríguez Masdeu
 
 **Codis:**
 - A la carpeta *annex: altres codis* hi ha els codis que hem utilitzar per evaluar diferents casos de P1 i P2 per triar-ne el més eficient, tal com s'explica a l'informe de la pràctica. p1.py i p2.py son concretament el cas 3.
